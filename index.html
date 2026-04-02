@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FIRE 璁＄畻鍣?- 璐㈠姟鑷敱璁＄畻鍣?/title>
+  <style>
+    :root {
+      --primary: #2d6a4f;
+      --primary-light: #40916c;
+      --accent: #d4a373;
+      --bg: #fefae0;
+      --card: #ffffff;
+      --text: #1b4332;
+      --text-light: #52796f;
+      --border: #d4a37340;
+      --danger: #c1121f;
+      --success: #2d6a4f;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+    .container { max-width: 900px; margin: 0 auto; padding: 2rem 1rem; }
+    header { text-align: center; margin-bottom: 2.5rem; }
+    header h1 { font-size: 2rem; color: var(--primary); margin-bottom: 0.5rem; }
+    header p { color: var(--text-light); font-size: 0.95rem; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+    @media (max-width: 640px) { .grid { grid-template-columns: 1fr; } }
+    .card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 1.5rem;
+    }
+    .card h2 { font-size: 1rem; color: var(--primary); margin-bottom: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+    .form-group { margin-bottom: 1rem; }
+    .form-group label { display: block; font-size: 0.85rem; color: var(--text-light); margin-bottom: 0.3rem; }
+    .form-group input {
+      width: 100%;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 1rem;
+      background: var(--bg);
+      color: var(--text);
+      outline: none;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus { border-color: var(--primary); }
+    .form-group .hint { font-size: 0.75rem; color: var(--text-light); margin-top: 0.2rem; }
+    .result-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1.5rem; }
+    .result-item { text-align: center; padding: 1rem; background: var(--bg); border-radius: 10px; }
+    .result-item .number { font-size: 1.5rem; font-weight: 700; color: var(--primary); }
+    .result-item .label { font-size: 0.8rem; color: var(--text-light); margin-top: 0.2rem; }
+    .result-item.highlight { background: linear-gradient(135deg, var(--primary), var(--primary-light)); color: white; }
+    .result-item.highlight .number { color: white; }
+    .result-item.highlight .label { color: rgba(255,255,255,0.8); }
+    .result-item.danger .number { color: var(--danger); }
+    #chart-container { width: 100%; height: 300px; margin-top: 1rem; }
+    .progress-bar-wrap { background: var(--bg); border-radius: 8px; height: 24px; overflow: hidden; margin-top: 1rem; }
+    .progress-bar { height: 100%; background: linear-gradient(90deg, var(--primary), var(--accent)); border-radius: 8px; transition: width 0.5s ease; display: flex; align-items: center; justify-content: center; color: white; font-size: 0.75rem; font-weight: 600; }
+    .milestones { display: flex; gap: 0.5rem; margin-top: 1rem; flex-wrap: wrap; }
+    .milestone { padding: 0.3rem 0.7rem; background: var(--bg); border-radius: 20px; font-size: 0.75rem; color: var(--text-light); border: 1px solid var(--border); }
+    .milestone.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .scenario-tabs { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+    .scenario-tab { padding: 0.4rem 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--bg); cursor: pointer; font-size: 0.85rem; transition: all 0.2s; }
+    .scenario-tab.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .sensitivity { margin-top: 1rem; }
+    .sensitivity-row { display: flex; justify-content: space-between; align-items: center; padding: 0.5rem 0; border-bottom: 1px solid var(--border); font-size: 0.85rem; }
+    .sensitivity-row:last-child { border-bottom: none; }
+    .sensitivity-row span { color: var(--text-light); }
+    .sensitivity-row strong { color: var(--primary); }
+    footer { text-align: center; margin-top: 2rem; padding-top: 1rem; border-top: 1px solid var(--border); color: var(--text-light); font-size: 0.8rem; }
+    .fire-target-display { text-align: center; padding: 1.5rem; background: linear-gradient(135deg, #2d6a4f10, #d4a37310); border-radius: 12px; margin-top: 1rem; }
+    .fire-target-display .amount { font-size: 2rem; font-weight: 700; color: var(--primary); }
+    .fire-target-display .desc { font-size: 0.85rem; color: var(--text-light); margin-top: 0.3rem; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>馃敟 FIRE 璁＄畻鍣?/h1>
+      <p>Financial Independence, Retire Early 鈥?璁＄畻浣犵殑璐㈠姟鑷敱涔嬭矾</p>
+    </header>
+
+    <div class="grid">
+      <!-- 宸︿晶锛氳緭鍏?-->
+      <div class="card">
+        <h2>馃摜 鍩烘湰淇℃伅</h2>
+        <div class="form-group">
+          <label>褰撳墠鎬诲瓨娆?/ 璧勪骇锛埪ワ級</label>
+          <input type="number" id="currentSavings" value="500000" min="0" step="10000">
+        </div>
+        <div class="form-group">
+          <label>骞存敹鍏ワ紙楼锛?/label>
+          <input type="number" id="annualIncome" value="300000" min="0" step="10000">
+        </div>
+        <div class="form-group">
+          <label>骞存敮鍑猴紙楼锛?/label>
+          <input type="number" id="annualExpense" value="150000" min="0" step="10000">
+        </div>
+        <div class="form-group">
+          <label>棰勬湡骞存姇璧勬敹鐩婄巼锛?锛?/label>
+          <input type="number" id="returnRate" value="7" min="0" max="30" step="0.5">
+          <div class="hint">寤鸿浣跨敤 4%~7%锛屼箰瑙?10%锛屼繚瀹?4%</div>
+        </div>
+        <div class="form-group">
+          <label>FIRE 鐩爣鍊嶇巼</label>
+          <input type="number" id="fireMultiple" value="25" min="10" max="50" step="1">
+          <div class="hint">閫氬父涓哄勾鏀嚭鐨?25 鍊嶏紙瀵瑰簲 4% 鎻愬彇瑙勫垯锛?/div>
+        </div>
+        <div class="form-group">
+          <label>閫氳揣鑶ㄨ儉鐜囷紙%锛夛紙鍙€夛級</label>
+          <input type="number" id="inflation" value="3" min="0" max="10" step="0.5">
+        </div>
+      </div>
+
+      <!-- 鍙充晶锛氱粨鏋?-->
+      <div class="card">
+        <h2>馃搳 FIRE 鐩爣</h2>
+        <div class="fire-target-display">
+          <div class="amount" id="fireNumber">楼3,750,000</div>
+          <div class="desc">FIRE 鎵€闇€鏈噾</div>
+        </div>
+
+        <div class="result-grid" style="margin-top: 1.5rem;">
+          <div class="result-item highlight">
+            <div class="number" id="fireYears">10.2</div>
+            <div class="label">骞磋揪鎴?FIRE</div>
+          </div>
+          <div class="result-item">
+            <div class="number" id="monthlySavings">楼12,500</div>
+            <div class="label">姣忔湀闇€鍌ㄨ搫</div>
+          </div>
+          <div class="result-item">
+            <div class="number" id="savingsRate">50%</div>
+            <div class="label">鍌ㄨ搫鐜?/div>
+          </div>
+          <div class="result-item">
+            <div class="number" id="yearlyInvest">楼150,000</div>
+            <div class="label">姣忓勾鎶曞叆</div>
+          </div>
+        </div>
+
+        <label style="font-size:0.85rem;color:var(--text-light);">褰撳墠杩涘害</label>
+        <div class="progress-bar-wrap">
+          <div class="progress-bar" id="progressBar" style="width: 13.3%;">13.3%</div>
+        </div>
+
+        <div class="milestones" id="milestones">
+          <div class="milestone">0%</div>
+          <div class="milestone">25%</div>
+          <div class="milestone">50%</div>
+          <div class="milestone">75%</div>
+          <div class="milestone">100%</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 鍥捐〃 -->
+    <div class="card" style="margin-top: 1.5rem;">
+      <h2>馃搱 璧勪骇澧為暱鏇茬嚎</h2>
+      <div class="scenario-tabs">
+        <button class="scenario-tab active" data-scenario="base">淇濆畧</button>
+        <button class="scenario-tab" data-scenario="optimistic">涔愯</button>
+        <button class="scenario-tab" data-scenario="pessimistic">鏋佺淇濆畧</button>
+      </div>
+      <div id="chart-container">
+        <canvas id="chart" style="width:100%;height:300px;"></canvas>
+      </div>
+    </div>
+
+    <!-- 鏁忔劅搴﹀垎鏋?-->
+    <div class="card" style="margin-top: 1.5rem;">
+      <h2>馃攢 鏁忔劅搴﹀垎鏋?鈥?鍚勫洜绱犲 FIRE 骞存暟鐨勫奖鍝?/h2>
+      <div class="sensitivity" id="sensitivity"></div>
+    </div>
+
+    <footer>
+      Made with 鉂わ笍 by Olivia 路 FIRE 璁＄畻鍣?路 鏁版嵁浠呭瓨鍌ㄥ湪鏈湴娴忚鍣?    </footer>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <script>
+    const el = (id) => document.getElementById(id);
+    let chart;
+
+    function formatMoney(n) {
+      if (n >= 100000000) return '楼' + (n / 100000000).toFixed(1) + '浜?;
+      if (n >= 10000) return '楼' + (n / 10000).toFixed(0) + '涓?;
+      return '楼' + n.toFixed(0);
+    }
+
+    function formatYear(year) {
+      const d = new Date();
+      const targetYear = d.getFullYear() + year;
+      return `${targetYear} 骞碻;
+    }
+
+    function calc({ savings, income, expense, rate, multiple, inflation = 0 }) {
+      const fireTarget = expense * multiple;
+      const realRate = (1 + rate / 100) / (1 + inflation / 100) - 1;
+      const annualSavings = income - expense;
+      const yearlyInvest = annualSavings;
+
+      let year = 0;
+      let balance = savings;
+      const path = [{ year: 0, balance: savings }];
+
+      while (balance < fireTarget && year < 100) {
+        year++;
+        balance = balance * (1 + realRate) + yearlyInvest;
+        path.push({ year, balance });
+      }
+
+      // Binary search for exact year
+      let lo = year - 1, hi = year;
+      if (hi === 0) hi = 1;
+      while (hi < 100 && balance < fireTarget) {
+        hi++;
+        balance = (savings + yearlyInvest / realRate) * Math.pow(1 + realRate, hi) - yearlyInvest / realRate;
+      }
+      const exactYear = year === 0 ? 0 : lo + (fireTarget - path[lo].balance) / (path[year] ? path[year].balance - path[lo].balance : yearlyInvest);
+
+      return {
+        fireTarget,
+        years: year === 0 ? 0 : exactYear,
+        yearlyInvest,
+        monthlyInvest: yearlyInvest / 12,
+        savingsRate: (annualSavings / income * 100).toFixed(0),
+        path,
+        fireReached: year < 100
+      };
+    }
+
+    function update() {
+      const savings = parseFloat(el('currentSavings').value) || 0;
+      const income = parseFloat(el('annualIncome').value) || 0;
+      const expense = parseFloat(el('annualExpense').value) || 0;
+      const rate = parseFloat(el('returnRate').value) || 0;
+      const multiple = parseFloat(el('fireMultiple').value) || 25;
+      const inflation = parseFloat(el('inflation').value) || 0;
+
+      const r = calc({ savings, income, expense, rate, multiple, inflation });
+
+      el('fireNumber').textContent = formatMoney(r.fireTarget);
+      el('fireYears').textContent = r.years === 0 ? '宸茶揪鎴? : r.years.toFixed(1) + '骞?;
+      el('monthlySavings').textContent = formatMoney(r.monthlyInvest);
+      el('savingsRate').textContent = r.savingsRate + '%';
+      el('yearlyInvest').textContent = formatMoney(r.yearlyInvest);
+
+      const progress = Math.min(100, savings / r.fireTarget * 100);
+      el('progressBar').style.width = progress.toFixed(1) + '%';
+      el('progressBar').textContent = progress.toFixed(1) + '%';
+
+      // Update milestones
+      const milestones = el('milestones').children;
+      for (let i = 0; i < milestones.length; i++) {
+        const threshold = parseInt(milestones[i].textContent);
+        milestones[i].classList.toggle('active', progress >= threshold);
+      }
+
+      // Sensitivity
+      const scenarios = [
+        { label: '鎻愰珮鏀剁泭鐜?+2%', rate: rate + 2 },
+        { label: '闄嶄綆鏀剁泭鐜?-2%', rate: rate - 2 },
+        { label: '骞存敮鍑?-10%', expense: expense * 0.9 },
+        { label: '骞存敮鍑?+10%', expense: expense * 1.1 },
+        { label: '鏀跺叆 +20%', income: income * 1.2 },
+      ];
+      el('sensitivity').innerHTML = scenarios.map(s => {
+        const res = calc({ savings, income: s.income || income, expense: s.expense || expense, rate: s.rate || rate, multiple, inflation });
+        const diff = res.years - r.years;
+        const diffStr = diff > 0 ? '+' + diff.toFixed(1) : diff < 0 ? diff.toFixed(1) : '0';
+        return `<div class="sensitivity-row"><span>${s.label}</span><strong>${res.years === 0 ? '宸茶揪鎴? : res.years.toFixed(1) + ' 骞?} <span style="color:var(--text-light);font-size:0.75rem;">(${diffStr})</span></strong></div>`;
+      }).join('');
+
+      updateChart(r);
+    }
+
+    function updateChart(data) {
+      const ctx = el('chart').getContext('2d');
+
+      const scenarios = {
+        base: { rate: parseFloat(el('returnRate').value) || 7, label: '淇濆畧 (7%)', color: '#2d6a4f' },
+        optimistic: { rate: (parseFloat(el('returnRate').value) || 7) + 3, label: '涔愯 (+3%)', color: '#d4a373' },
+        pessimistic: { rate: (parseFloat(el('returnRate').value) || 7) - 3, label: '鏋佺淇濆畧 (-3%)', color: '#c1121f' }
+      };
+
+      const activeTab = document.querySelector('.scenario-tab.active').dataset.scenario;
+      const scenario = scenarios[activeTab];
+
+      const inflation = parseFloat(el('inflation').value) || 0;
+      const income = parseFloat(el('annualIncome').value) || 0;
+      const expense = parseFloat(el('annualExpense').value) || 0;
+      const savings = parseFloat(el('currentSavings').value) || 0;
+      const multiple = parseFloat(el('fireMultiple').value) || 25;
+
+      const r = calc({ savings, income, expense, rate: scenario.rate, multiple, inflation });
+      const fireTarget = r.fireTarget;
+
+      if (chart) chart.destroy();
+
+      const labels = r.path.map(p => formatYear(p.year));
+      const values = r.path.map(p => p.balance);
+
+      chart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [
+            {
+              label: '璧勪骇',
+              data: values,
+              borderColor: scenario.color,
+              backgroundColor: scenario.color + '20',
+              fill: true,
+              tension: 0.3,
+              pointRadius: 0,
+              pointHoverRadius: 5
+            },
+            {
+              label: 'FIRE 鐩爣',
+              data: new Array(values.length).fill(fireTarget),
+              borderColor: '#d4a373',
+              borderDash: [5, 5],
+              fill: false,
+              pointRadius: 0
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { position: 'top' },
+            tooltip: {
+              callbacks: {
+                label: (ctx) => ctx.dataset.label + ': ' + formatMoney(ctx.raw)
+              }
+            }
+          },
+          scales: {
+            x: { title: { display: true, text: '骞翠唤' } },
+            y: {
+              title: { display: true, text: '璧勪骇锛埪ワ級' },
+              ticks: { callback: (v) => formatMoney(v) }
+            }
+          }
+        }
+      });
+    }
+
+    // Event listeners
+    ['currentSavings', 'annualIncome', 'annualExpense', 'returnRate', 'fireMultiple', 'inflation'].forEach(id => {
+      el(id).addEventListener('input', update);
+    });
+
+    document.querySelectorAll('.scenario-tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.scenario-tab').forEach(t => t.classList.remove('active'));
+        tab.classList.add('active');
+        update();
+      });
+    });
+
+    update();
+  </script>
+</body>
+</html>
